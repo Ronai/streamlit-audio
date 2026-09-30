@@ -21,24 +21,24 @@ def showfreqdomain():
 
     st.markdown("""
 
-INTRODUCTION
+INTRODUÇÃO
 
-An important step in many signal processing algorithms is to transform time series data 
-(data points sequential in time) into a new representation in the frequency domain.  
-We will begin to explain what that means and why it is useful in this tutorial, by 
-recreating a target signal from components.
+Uma etapa importante em muitos algoritmos de processamento de sinais é transformar dados de série temporal — 
+pontos de dados organizados sequencialmente no tempo — em uma nova representação no domínio da frequência.
+Neste tutorial, começaremos explicando o que isso significa e por que essa transformação é útil, 
+reconstruindo um sinal-alvo a partir de suas componentes.
 
-THREE NOTES
+TRÊS NOTAS
 
-The target signal below is composed of 3 different pitches, or 
-**[frequencies](https://youtu.be/Axx8WfxQDkk)**.  Imagine we record this signal from our 
-favorite song, and we want to figure out the three frequencies used to make it.  How could we do this?  A similar 
-problem comes up in many experiments, when we record some data, and then wish to know what frequencies were used
-to generate the signal.
-
+O sinal-alvo abaixo é composto por três alturas sonoras diferentes, ou…
+**[frequências](https://youtu.be/Axx8WfxQDkk)**. Imagine que gravamos esse sinal de nossa música 
+favorita e queremos descobrir quais são as três frequências utilizadas para produzi-lo. 
+Como poderíamos fazer isso? Um problema semelhante aparece em muitos experimentos: 
+registramos determinados dados e, em seguida, queremos identificar quais frequências 
+contribuíram para gerar o sinal.
 """)
 
-    st.markdown("#### Target signal in time domain:")
+    st.markdown("#### Sinal-alvo no domínio do tempo:")
 
     sig1 = makesine(200, 4, False)
     sig2 = makesine(250, 3, False)
@@ -50,33 +50,38 @@ to generate the signal.
     st.audio(make_audio_file(totalsignal), format='audio/wav')
 
     st.markdown("""
-    The above plot shows the target signal in the **time domain**.  In a time-domain plot, the x-axis 
-    always represents time.  The y-axis represents the quantity measured at each time sample.  
-    For sound, this is the air pressure striking your ear or microphone at any moment.
+    O gráfico acima mostra o sinal-alvo no **domínio do tempo**. 
+    Em um gráfico no domínio do tempo, o eixo x representa sempre o tempo. 
+    O eixo y representa a grandeza medida em cada instante de amostragem. 
+    Para um sinal sonoro, essa grandeza corresponde à pressão do ar que atinge o ouvido 
+    ou o microfone em cada momento.
 
-    Can you tell which 3 **frequencies**, or pitches, were used to create this signal?  Probably not!
-    While the time domain is how we often record data, it is not a good way to see the componennt frequencies.
-    Instead, we can use a process known as a 
-    [Fourier Transform](https://www.youtube.com/watch?v=1JnayXHhjlg) to convert the signal to the 
-    **frequency domain**.  
+    Você consegue identificar quais foram as **três frequências**, ou alturas sonoras, 
+    usadas para criar esse sinal? Provavelmente não!
+    
+    Embora o domínio do tempo seja a forma como frequentemente registramos os dados, ele 
+    não é a melhor representação para visualizar as frequências que compõem o sinal. 
+    Em vez disso, podemos utilizar um processo conhecido como uma
+    [Transformada de Fourier](https://www.youtube.com/watch?v=1JnayXHhjlg) para converter o 
+    sinal para o **domínio da frequência**.
 
-    :point_right: **Click the check box below to convert the target signal to the frequency domain**.
+    :point_right: **Clique na caixa de seleção abaixo para converter o sinal-alvo para o domínio da frequência.**.
 
     """)
 
-    showfreq = st.checkbox('Convert target signal to the frequency domain', value=False)
+    showfreq = st.checkbox('Converter o sinal-alvo para o domínio da frequência.', value=False)
 
     if showfreq:
         freqdomain = totalsignal.fft()
 
         source = pd.DataFrame({
-            'Frequency (Hz)': freqdomain.frequencies,
+            'Frequência (Hz)': freqdomain.frequencies,
             'Amplitude': np.abs(freqdomain.value),
             'color':['#1f77b4', '#ff7f0e'][1]
         })
 
         chart = alt.Chart(source).mark_line().encode(
-            alt.X('Frequency (Hz)',
+            alt.X('Frequência (Hz)',
                   scale=alt.Scale(
                       domain=(0, 400),
                       clamp=True)),
@@ -85,78 +90,79 @@ to generate the signal.
                       domain=(-0, 5),
                       clamp=True)),
             color=alt.Color('color', scale=None)
-        ).properties(title='Target Signal in Frequency Domain')
+        ).properties(title='Sinal-alvo no domínio da frequência')
 
         st.altair_chart(chart, width='stretch')
             
         st.markdown("""
-        Converting to the **frequency domain** shows us the individual components that contributed to the total.
-        In the **frequency domain**, the frequency (or pitch) of each component signal is shown on the x-axis.
-        The **[amplitude](https://www.youtube.com/watch?v=TsQL-sXZOLc)** 
-        (or loudness) of each component signal is shown on the y-axis.
+        A conversão para o **domínio da frequência** permite visualizar as componentes individuais 
+        que contribuem para o sinal total. No **domínio da frequência**, a frequência — ou altura sonora — 
+        de cada componente do sinal é representada no eixo x.
+        A **[amplitude](https://www.youtube.com/watch?v=TsQL-sXZOLc)** 
+        (ou intensidade sonora) — de cada componente do sinal é representada no eixo y.
 
-        Using the frequency domain plot above:
-        * What are the 3 frequencies used to make the total signal?  
-        * What is the amplitude of each frequency?
+        Usando o gráfico no domínio da frequência acima:
+        *Quais são as três frequências utilizadas para compor o sinal total?
+        *Qual é a amplitude de cada uma dessas frequências?
         """)
 
 
     st.markdown("""
-    :point_right: **Try to recreate the above signal, using three components, or notes.  You can adjust the sliders to create each component**.
+    :point_right: **Tente reconstruir o sinal acima usando três componentes, ou notas. 
+                    Você pode ajustar os controles deslizantes para definir cada componente.**.
     """)
 
-    st.markdown("#### Component 1")
-    freq1 = st.slider("Frequency (Hz)", 100, 400, 100, step=10)
+    st.markdown("#### Componente 1")
+    freq1 = st.slider("Frequência (Hz)", 100, 400, 100, step=10)
     amp1 = st.number_input("Amplitude", 0, 5, 0, key='amp1slider')
 
     guess1 = makesine(freq1, amp1)
     
-    st.markdown("#### Component 2")
-    freq2 = st.slider("Frequency (Hz)", 100, 400, 150, step=10)
+    st.markdown("#### Componente 2")
+    freq2 = st.slider("Frequência (Hz)", 100, 400, 150, step=10)
     amp2 = st.number_input("Amplitude", 0, 5, 0, key='amp2slider')
 
     guess2 = makesine(freq2, amp2)
     
-    st.markdown("#### Component 3")
-    freq3 = st.slider("Frequency (Hz)", 100, 400, 200, step=10)
+    st.markdown("#### Componente 3")
+    freq3 = st.slider("Frequência (Hz)", 100, 400, 200, step=10)
     amp3 = st.number_input("Amplitude", 0, 5, 0, key='amp3slider')
 
     guess3 = makesine(freq3, amp3)
 
-    st.markdown("### Adding the 3 components together:")
+    st.markdown("### Somando as três componentes:")
     
     guess  = guess1 + guess2 + guess3
 
     chart1 = plot_signal(guess, color_num=0, display=False)
     chart2 = plot_signal(totalsignal, color_num=1, display=False)
-    chart = (chart2 + chart1).properties(title='Target Signal (orange) & Guess (blue)')
+    chart = (chart2 + chart1).properties(title='Sinal-alvo (laranja) & tentativa de reconstrução (azul)')
     st.altair_chart(chart, width='stretch')
         
     mismatch = (totalsignal.crop(cropstart, cropend) - guess.crop(cropstart, cropend)).value.max()
     # st.write(mismatch)
 
     if mismatch < 0.1:
-        st.markdown("### A perfect match!  Great job!!  :trophy:")
+        st.markdown("### Uma correspondência perfeita! Excelente trabalho!!  :trophy:")
         st.balloons()
     elif mismatch < 3:
-        st.markdown("### That's really close!")    
+        st.markdown("### Está bem perto!")    
     
-    st.markdown("#### Audio for target signal")
+    st.markdown("#### Áudio do sinal-alvo")
     st.audio(make_audio_file(totalsignal), format='audio/wav')
 
-    st.markdown("#### Audio for guess")
+    st.markdown("#### Áudio da tentativa de reconstrução")
     st.audio(make_audio_file(guess), format='audio/wav')
     
     st.markdown("""
-    See if you can recreate the target signal, by adjusting the 3 components.  
+    Veja se você consegue recriar o sinal-alvo, ajustando as três componentes.
 
-    *Hint: Look for the component frequencies and amplitudes in the frequency-domain plot.*
+    *Dica: observe as frequências e amplitudes das componentes no gráfico no domínio da frequência*
     """)
 
     st.markdown("""
-    When ready, go to the next section using the controls at the 
-    top.
+    Quando estiver pronto, vá para a próxima seção usando os controles na parte superior.
     """)
     
-    # -- Close all open figures
+    # -- Fechar todas as figuras abertas.
     plt.close('all')
