@@ -1,4 +1,4 @@
-# -- Use Agg backend to be thread safe
+# -- Usar o backend Agg para garantir segurança em ambientes com múltiplas threads.
 import matplotlib as mpl
 mpl.use("agg")
 
@@ -16,80 +16,80 @@ from scipy import signal
 from scipy.io import wavfile
 from freqdomain2 import showfreqdomain
 
-# -- Helper functions in this git repo
+# -- Funções auxiliares deste repositório Git.
 from helper import *
 
-apptitle = 'Signal Processing Tutorial'
+apptitle = 'Tutorial de Processamento de Sinais'
 
 st.set_page_config(page_title=apptitle, page_icon=":headphones:",
                                initial_sidebar_state='collapsed')
 
-# Title the app
+# Definir o título do aplicativo.
 st.title(apptitle)
 
 fs = 32000
 noisedt = 8
 noise = deepcopy(makewhitenoise(fs, noisedt))
 
-#-- Try to color the noise
+#-- Tentar colorir o ruído
 noisefreq = noise.fft()
 color = 1.0 / (noisefreq.frequencies)**2
 indx = np.where(noisefreq.frequencies.value < 30)
-color[indx] = 0  #-- Apply low frequency cut-off at 30 Hz
+color[indx] = 0  #-- Aplicar o corte de baixa frequência em 30 Hz
 
-#-- Red noise in frequency domain
+#-- Ruído vermelho no domínio da frequência
 weightedfreq = noisefreq * color.value
 
-# -- Try returning to time domain
+# -- Tentar retornar ao domínio do tempo.
 colorednoise = weightedfreq.ifft()
 
 ###
-# -- Inject the signal
+# -- Injetar o sinal.
 ###
 secret = TimeSeries.read('LOZ_Secret.wav')
 
-# -- Normalize and convert to float
-secret -= secret.value[0]  #-- Remove constant offset
+# -- Normalizar e converter para ponto flutuante.
+secret -= secret.value[0]  #-- Remover o deslocamento constante.
 secret = np.float64(secret)
-secret = secret/np.max(np.abs(secret)) * 1*1e-8   #-- Set amplitude
+secret = secret/np.max(np.abs(secret)) * 1*1e-8   #-- Definir a amplitude.
 secret.t0 = 4
 
-volume = st.sidebar.radio("Secret sound volume", ["Default", "Louder"])
+volume = st.sidebar.radio("Volume do som secreto", ["Padrão", "Mais alto"])
 
-if volume == 'Louder':
+if volume == 'Mais alto':
     maze = colorednoise.inject(10*secret)
 else:
-# -- Might be useful to make easier to hear option
+# -- Pode ser útil incluir uma opção para facilitar a audição.
     maze = colorednoise.inject(secret)
 
 
 # -------
-# Begin Display Here
+# Iniciar a exibição a partir daqui.
 # -------
-st.markdown("## Introduction")
+st.markdown("## Introdução")
 
 st.markdown("""
-In this demo, we will try to find a **secret sound** hidden in noisy
-data.  To do this, we will practice with a few signal processing concepts:
+Nesta demonstração, tentaremos encontrar um **som secreto** escondido em dados ruidosos. 
+Para isso, vamos explorar alguns conceitos de processamento de sinais:
 
- * Plotting in the time domain and frequency domain
- * Highpass and bandpass filtering
- * Whitening
+ * Representação gráfica nos domínios do tempo e da frequência
+ * Filtragem passa-altas e passa-faixa
+ * Branqueamento (whitening)
 """)
 
 sectionnames = [
-                'Introduction to the frequency domain',
-                'White Noise',
-                'Red Noise',
-                'Find the Secret Sound',
-                'Whitening',
-                'Gravitational Wave Data',
+                'Introdução ao domínio da frequência',
+                'Ruído branco (White Noise)',
+                'Ruído vermleho (Red Noise)',
+                'Encontre o som secreto',
+                'Branqueamento (Whitening)',
+                'Dados de ondas gravitacionais',
 ]
 
 def headerlabel(number):
     return "{0}: {1}".format(number, sectionnames[number-1])
     
-page = st.radio('Select Section:', [1,2,3,4,5,6], format_func=headerlabel)
+page = st.radio('Selecionar seção:', [1,2,3,4,5,6], format_func=headerlabel)
 
 st.markdown("## {}".format(headerlabel(page)))
 
@@ -99,188 +99,177 @@ if page==1:
     
 if page==2:
 
-    # White Noise
+    # Ruído branco
     
     st.markdown("""
-    Next, let's take a look at some **white noise**.  Any 
-    signal can be represented based on its frequency content.  When we 
-    say that noise is *white*, we mean the signal has about the same 
-    amplitude at all frequencies.  
+    Agora, vamos observar um pouco de **ruído branco**. 
+    Qualquer sinal pode ser representado a partir de seu conteúdo em frequência. 
+    Quando dizemos que um ruído é branco, queremos dizer que o sinal apresenta aproximadamente 
+    a mesma amplitude em todas as frequências. 
     
-    Below, we'll represent the **same signal three different ways**:
+    A seguir, representaremos o **mesmo sinal de três maneiras diferentes**:
     
-    * A time-domain signal
-    * A frequency-domain signal
-    * An audio file
+    *Um sinal no domínio do tempo  
+    *Um sinal no domínio da frequência  
+    *Um arquivo de áudio
     """)
 
-    st.markdown("### Time domain")
+    st.markdown("### Domínio do tempo")
 
     st.markdown("""
-    In the **time domain**, we see a signal as a function of time.  The 
-    x-axis represents time, and the y-axis represents the value of
-    the signal at each time.  For an audio signal, the signal value 
-    corresponds to the amount of pressure felt on your eardrum at any 
-    moment.  For a 
-    gravitatonal-wave signal, the signal value represents the strain - 
-    or fractional change in length - of the observatory's arms.
+    No **domínio do tempo**, observamos um sinal como função do tempo. 
+    O eixo x representa o tempo, enquanto o eixo y representa o valor do sinal em cada instante. 
+    Para um sinal de áudio, esse valor corresponde à variação de pressão percebida pelo tímpano em cada momento. 
+    Para um sinal de **onda gravitacional**, o valor do sinal representa o strain, isto é, a variação fracionária 
+    do comprimento dos braços do observatório.
     """)
 
-    tplot = noise.plot(ylabel='Pressure')
+    tplot = noise.plot(ylabel='Pressão')
     st.pyplot(tplot)
     
-    st.markdown("### Frequency domain")
+    st.markdown("### Domínio da frequência")
 
     st.markdown("""
-    In the **frequency domain**, the x-axis represents a frequency 
-    value, and the y-axis shows the 
-    **amplitude**,
-    or the closely related amplitude spectral density,
-    of the signal at each
-    frequency.  Since white noise has about the same amplitude at each 
-    frequency, this plot is mostly flat as you move from left to right.
+    No **domínio da frequência**, o eixo x representa os valores de frequência, 
+    enquanto o eixo y mostra a **amplitude** — ou a grandeza estreitamente relacionada, 
+    a densidade espectral de amplitude — do sinal em cada frequência. 
+    Como o ruído branco apresenta aproximadamente a mesma amplitude em todas as frequências, 
+    esse gráfico é praticamente plano ao longo do eixo das frequências.
     """)
 
-    figwn = noise.asd(fftlength=1).plot(ylim=[1e-10, 1], ylabel='Amplitude Spectral Density')
+    figwn = noise.asd(fftlength=1).plot(ylim=[1e-10, 1], ylabel='Densidade espectral de amplitude')
     st.pyplot(figwn)
 
-    st.markdown("### Audio player")
+    st.markdown("### Reprodutor de áudio")
     st.markdown("""
-    :point_right: **Use the audio player to listen the signal.  You should hear
-    a hiss of white noise**.
+    :point_right: **Use o reprodutor de áudio para ouvir o sinal. 
+    Você deverá ouvir o chiado característico do ruído branco.**.
     """)
     
     st.audio(make_audio_file(noise), format='audio/wav')
 
     st.markdown("")
     st.markdown("""
-    When ready, go to the next section using the controls at the 
-    top.
+    Quando estiver pronto, vá para a próxima seção usando os controles na parte superior.
     """)
     
 if page == 3:
 
-    # st.markdown("## 3: Red Noise")
+    # st.markdown("## 3: Ruído vermelho")
     
     st.markdown("""
-    Next, we'll look at some **red noise**.  Red noise 
-    has more power at low frequencies than high frequencies.
+    Agora, vamos observar um pouco de ruído vermelho. O ruído vermelho apresenta mais potência 
+    em baixas frequências do que em altas frequências.
     
-    Imagining random noise at different frequencies can be a hard thing
-    to understand.  A silly way to picture this is as a sports stadium
-    full of animals cheering. Some animals (like birds and kittens)
-    cheer with higher pitches, and other animals (like bullfrogs and 
-    lions) will cheer with lower pitches.  If the stadium has animals of 
-    all kinds in equal numbers, you might get white noise cheering.  If 
-    the stadium is full of low pitch creatures (say, lots of bullfrogs), 
-    you might get red noise cheering.  Can you imagine the difference?
+    Pode ser difícil imaginar como se comporta um ruído aleatório distribuído em diferentes frequências. 
+    Uma forma divertida de visualizar isso é pensar em um estádio esportivo cheio de animais fazendo barulho. 
+    Alguns animais, como pássaros e gatinhos, produzem sons mais agudos, enquanto outros, como sapos e leões, 
+    produzem sons mais graves. Se o estádio tiver animais de todos os tipos em quantidades semelhantes, o 
+    resultado poderia se parecer com um ruído branco. Já se o estádio estiver cheio de animais que produzem 
+    ons graves — por exemplo, muitos sapos — o resultado poderia se parecer com um ruído vermelho. 
+    Você consegue imaginar a diferença?
     
-    A similar idea can be seen in noise in the LIGO and Virgo instruments.
-    Low frequency noise sources contribute noise at low frequencies.  These 
-    are big, slowly vibrating things, especially motion from the constant 
-    shaking of the ground, called seismic motion.  At higher frequencies, 
-    there are lots of noise souces from vibrating instrument parts, like 
-    shaking mirrors and tables.  
+    Uma ideia semelhante pode ser observada no ruído dos detectores LIGO e Virgo. 
+    Fontes de ruído de baixa frequência contribuem principalmente nas baixas frequências. 
+    Em geral, estão associadas a estruturas grandes e de movimento lento, especialmente ao movimento contínuo 
+    do solo, conhecido como movimento sísmico. Em frequências mais altas, há diversas fontes de ruído 
+    associadas à vibração de componentes do instrumento, como espelhos e mesas ópticas.
     """)
 
     ###
-    # -- Show red noise with signal
+    # -- Mostrar o ruído vermelho com o sinal
     ###
 
-    st.markdown("In the time-domain, you can see the red noise looks random.")
+    st.markdown("No domínio do tempo, podemos observar que o ruído vermelho apresenta um comportamento aleatório.")
 
-    figrnt = maze.plot(ylabel='Pressure')
+    figrnt = maze.plot(ylabel='Pressão')
     st.pyplot(figrnt)
 
-    st.markdown("In the frequency-domain, the red noise has lots of power at low frequencies.")
+    st.markdown("No domínio da frequência, o ruído vermelho apresenta maior potência nas baixas frequências.")
 
-    figrn = maze.asd(fftlength=1).plot(ylabel='Amplitude Spectral Density', ylim=[1e-11, 1e-4], xlim=[30, fs/2])
+    figrn = maze.asd(fftlength=1).plot(ylabel='Densidade espectral de amplitude', ylim=[1e-11, 1e-4], xlim=[30, fs/2])
     st.pyplot(figrn)
         
     st.audio(make_audio_file(maze), format='audio/wav')
     st.markdown("""
-    Can you hear the bullfrogs cheering?
+    Você consegue ouvir os sapos coaxando?
 
-    :point_right: **How does this compare with the white noise sound?**
+    :point_right: **Como esse som se compara ao som do ruído branco?**
     """)
 
 if page == 4:
 
     # ----
-    # Try to recover the signal
+    # Tente recuperar o sinal
     # ----
-    # st.markdown("## 4: Find the Secret Sound")
+    # st.markdown("## 4: Encontre o som secreto")
     
     st.markdown("""
-    The red noise above isn't just noise - there's a secret sound 
-    inside.  Did you hear it?  Probably not!  All of that low-frequency
-    noise is making the secret sound very hard to hear.  But ... if the
-    secret sound is at higher frequencies, maybe we could still hear it.
-    
-    What we need is a way to get rid of some of the low frequency noise, 
-    while keeping the high frequency part of the signal.  In signal processing,
-    this is known as a **high pass filter** - a filter that removes
-    low frequency sounds, and keeps (or allows to *pass*) the high frequency 
-    sounds.  The term **cutoff frequency** marks the boundary: frequencies
-    below the cuttoff frequency are removed, and frequencies above the 
-    cutoff frequency are passed.
+    O ruído vermelho acima não é apenas ruído — há um som secreto escondido nele. 
+    Você conseguiu ouvi-lo? Provavelmente não! Todo esse ruído de baixa frequência está tornando o 
+    som secreto muito difícil de perceber. Mas... se o som secreto estiver em frequências mais altas, 
+    talvez ainda seja possível ouvi-lo.
 
-    See if you can use a high pass filter to find the secret sound.  
+    O que precisamos é de uma forma de remover parte do ruído de baixa frequência, preservando 
+    a parte do sinal em frequências mais altas. Em processamento de sinais, isso é feito com um filtro 
+    passa-altas (high-pass filter): um filtro que atenua os sons de baixa frequência e mantém, ou 
+    permite passar, os sons de alta frequência. A frequência de corte (cutoff frequency) define essa separação: 
+    frequências abaixo dela são atenuadas, enquanto frequências acima dela são preservadas.
 
-    :point_right: **Adjust the 
-    cutoff frequency using the slider below, and see if you can remove 
-    some noise to find the secret sound.**
+    Veja se você consegue usar um filtro passa-altas para encontrar o som secreto. 
+
+    :point_right: **Ajuste a frequência de corte usando o controle deslizante abaixo e veja se é 
+     possível remover parte do ruído e revelar o som secreto.**
 
     """)
 
-    lowfreq = st.slider("High pass filter cutoff frequency (Hz)", 0, 3000, 0, step=100)
+    lowfreq = st.slider("Frequência de corte do filtro passa-altas (Hz)", 0, 3000, 0, step=100)
     if lowfreq == 0: lowfreq=1
 
     highpass = maze.highpass(lowfreq)
     #st.pyplot(highpass.plot())
 
-    fighp = highpass.asd(fftlength=1).plot(ylabel='Amplitude Spectral Density',
+    fighp = highpass.asd(fftlength=1).plot(ylabel='Densidade espectral de amplitude',
                                            ylim=[1e-12, 1e-5],
                                            xlim=[30, fs/2]
                                            )
     ax = fighp.gca()
-    ax.axvspan(1, lowfreq, color='red', alpha=0.3, label='Removed by filter')
+    ax.axvspan(1, lowfreq, color='red', alpha=0.3, label='Removido pelo filtro')
     st.pyplot(fighp)
 
     st.audio(make_audio_file(highpass), format='audio/wav')
 
-    st.markdown("Can you hear the sound now?  What value of the cutoff frequency makes it easiest to hear?")
+    st.markdown("Você consegue ouvir o som agora? Qual valor da frequência de corte torna o som mais fácil de ouvir?")
 
     st.markdown("")
-    needhint = st.checkbox("Need a hint?", value=False)
+    needhint = st.checkbox("Precisa de uma dica?", value=False)
 
     if needhint:
 
-        st.markdown("""Here is the secret sound.  Can you find it hidden in the
-        red noise above?
+        st.markdown("""Aqui está o som secreto. Você consegue identificá-lo 
+        escondido no ruído vermelho acima?
         """)
 
         st.audio(make_audio_file(secret), format='audio/wav')
 
-        st.markdown("""You can also make the sound easier to hear by 
-        clicking the 'Louder' option in the menu at left
+        st.markdown("""Você também pode facilitar a audição do som selecionando 
+        a opção 'Mais alto' no menu à esquerda.
         """)
         
 if page == 5:
-    # st.markdown("## 5: Whitening")
+    # st.markdown("## 5: Branqueamento")
 
     st.markdown("""
-    **Whitening** is a process that re-weights a signal, so that all
-    frequency bins have a nearly equal amount of noise.  In our example,
-    it is hard to hear the signal, because all of the low-frequency 
-    noise covers it up.  By whitening the data,
-    we can prevent the low-frequency noise from dominating what we hear. 
+    O **branqueamento** (whitening) é um processo que repondera o sinal de modo que todas as 
+    faixas de frequência apresentem aproximadamente a mesma quantidade de ruído. 
+    Em nosso exemplo, é difícil ouvir o sinal porque o ruído de baixa frequência acaba encobrindo-o. 
+    Ao aplicar o branqueamento aos dados, podemos evitar que o ruído de baixa frequência domine aquilo que ouvimos.
     
-    :point_right: **Use the checkbox to whiten the data**
+    :point_right: **Use a caixa de seleção para aplicar o branqueamento aos dados.**
     """)
 
     
-    whiten = st.checkbox("Whiten the data?", value=False)
+    whiten = st.checkbox("Aplicar branqueamento aos dados?", value=False)
 
     if whiten:
         whitemaze = maze.whiten()
@@ -288,39 +277,36 @@ if page == 5:
         whitemaze = maze
 
     st.markdown("""
-    After whitening, you can see the secret sound in the time domain.  You 
-    may also notice that the whitened signal gently fades in at the beginning,
-    and 
-    out at the end - this gentle turn on / turn off is due to 
-    **windowning**, and is important to apply in many signal processing
-    applications.
+    Após o branqueamento, você pode observar o som secreto no **domínio do tempo**. 
+    Também é possível notar que o sinal branqueado surge gradualmente no início e desaparece suavemente no final. 
+    Essa transição gradual de entrada e saída é causada pelo **janelamento** (windowing), 
+    uma técnica importante em muitas aplicações de processamento de sinais.
     """)
     
     st.pyplot(whitemaze.plot())
 
-    figwh = whitemaze.asd(fftlength=1).plot(ylim=[1e-12, 1], xlim=[30,fs/2], ylabel='Amplitude Spectral Density')
+    figwh = whitemaze.asd(fftlength=1).plot(ylim=[1e-12, 1], xlim=[30,fs/2], ylabel='Densidade espectral de amplitude')
     st.pyplot(figwh)
     
     st.audio(make_audio_file(whitemaze), format='audio/wav')
 
-    st.markdown("""Try using the checkbox to whiten the data.  Is it 
-    easier to hear the secret sound with or without whitening?
+    st.markdown("""Experimente usar a caixa de seleção para aplicar o branqueamento aos dados. 
+    É mais fácil ouvir o som secreto com ou sem o branqueamento?
     """)
 
 if page == 6:
 
-    # st.markdown("## 6: Gravitational Wave Data")
+    # st.markdown("## 6: Dados de ondas gravitacionais")
 
     st.markdown("""
-    Finally, we'll try what we've learned on some real 
-    gravitational-wave data from LIGO, around the binary black 
-    hole signal GW150914.  We'll add one more element: 
-    a **bandpass filter**.  A bandpass filter uses both a low frequency
-    cutoff and a high frequency cutoff, and only passes signals in the 
-    frequency band between these values. 
+    Por fim, vamos aplicar o que aprendemos a **dados reais de ondas gravitacionais do LIGO**, 
+    em torno do sinal **GW150914**, produzido pela coalescência de um sistema binário de buracos negros. 
+    Vamos acrescentar mais um elemento: um **filtro passa-faixa* ('band-pass filter'). 
+    Esse filtro utiliza uma frequência de corte inferior e uma frequência de corte superior, 
+    permitindo a passagem apenas das componentes do sinal cujas frequências estejam dentro desse intervalo.
 
-    :point_right: **Try using a whitening filter and a band-pass filter to reveal the
-    gravitational wave signal in the data below.**  
+    :point_right: **Experimente usar um **filtro de branqueamento** e um **filtro passa-faixa** para revelar 
+    o sinal de onda gravitacional nos dados abaixo.**  
     """)
 
     detector = 'H1'
@@ -332,14 +318,14 @@ if page == 6:
     center = int(t0)
     strain = strain.crop(center-14, center+14)
 
-    # -- Try whitened and band-passed plot
-    # -- Whiten and bandpass data
-    st.subheader('Whitened and Bandbassed Data')
+    # -- Experimente visualizar os dados após o branqueamento e a filtragem passa-faixa.
+    # -- Aplicar branqueamento e filtragem passa-faixa aos dados.
+    st.subheader('Dados branqueados e filtrados por passa-faixa')
 
-    lowfreqreal, highfreqreal = st.slider("Band-pass filter cutoff (Hz)",
+    lowfreqreal, highfreqreal = st.slider("Frequências de corte do filtro passa-faixa (Hz)",
                                           1, 1200, value=(1,1200) )
 
-    makewhite = st.checkbox("Apply whitening", value=False)
+    makewhite = st.checkbox("Aplicar branqueamento", value=False)
 
     if makewhite:
         white_data = strain.whiten()
@@ -349,45 +335,45 @@ if page == 6:
     bp_data = white_data.bandpass(lowfreqreal, highfreqreal)
 
     st.markdown("""
-    With the right filtering, you might be able to see the signal in the time domain plot.
+    Com a filtragem adequada, talvez seja possível visualizar o sinal no gráfico no domínio do tempo.
     """)
 
     fig3 = bp_data.plot(xlim=[t0-0.1, t0+0.1])
     st.pyplot(fig3)
 
-    # -- PSD of whitened data
-    # -- Plot psd
-    psdfig = bp_data.asd(fftlength=4).plot(xlim=[10, 1800], ylabel='Amplitude Spectral Density')    
+    # -- Densidade espectral de potência (PSD) dos dados branqueados
+    # -- Plotar a PSD
+    psdfig = bp_data.asd(fftlength=4).plot(xlim=[10, 1800], ylabel='Densidade espectral de amplitude')    
     ax = psdfig.gca()
     ax.axvspan(1, lowfreqreal, color='red', alpha=0.3, label='Removed by filter')
-    ax.axvspan(highfreqreal, 1800, color='red', alpha=0.3, label='Removed by filter')
+    ax.axvspan(highfreqreal, 1800, color='red', alpha=0.3, label='Removido pelo filtro')
     st.pyplot(psdfig)
 
-    # -- Audio
+    # -- Áudio
     st.audio(make_audio_file(bp_data.crop(t0-1, t0+1)), format='audio/wav')
 
-    # -- Close all open figures
+    # -- Fechar todas as figuras abertas
     plt.close('all')
 
-    st.markdown("""With the right filtering, you might be able to hear
-    the black hole signal.  It doesn't sound like much - just a quick thump.  
+    st.markdown("""Com a filtragem adequada, talvez seja possível ouvir o sinal produzido pela 
+    coalescência dos buracos negros. O som é muito breve — algo semelhante a um pequeno **baque**.  
  """)
 
     st.markdown("")
-    hint = st.checkbox('Need a hint?')
+    hint = st.checkbox('Precisa de uma dica?')
 
     if hint:
 
         st.markdown("""
-        Hint: Try using a band pass from 30 to 400 Hz, with whitening on.
-        This is similar to what was used for Figure 1 of the 
-        [GW150914 discovery paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.116.061102), also shown below:
+        Dica: experimente usar um filtro passa-faixa de 30 a 400 Hz, 
+        com o branqueamento ativado. Isso é semelhante ao procedimento utilizado na Figura 1 do
+        [artigo de descoberta do GW150914](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.116.061102), também mostrado abaixo:
         """)
         
         st.image('https://journals.aps.org/prl/article/10.1103/PhysRevLett.116.061102/figures/1/large')
 
-st.markdown("""## About this app
+st.markdown("""## Sobre este aplicativo
 
-This app displays data from LIGO, Virgo, and GEO downloaded from the Gravitational Wave Open Science Center at 
+Este aplicativo exibe dados do LIGO, Virgo e GEO obtidos a partir do Gravitational Wave Open Science Center at 
 [https://gwosc.org](https://gwosc.org).
 """)
