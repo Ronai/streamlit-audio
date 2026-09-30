@@ -1,12 +1,9 @@
-## Signal Processing Tutorial 
+# Tutorial de Processamento de Sinais
 
-This tutorial gives a short inroduction to band-pass filtering and whitening.
+Este tutorial apresenta uma breve introdução à filtragem passa-faixa (*band-pass filtering*) e ao branqueamento (*whitening*).
 
-This app makes use of audio adopted from [HTW](https://www.ZeldaSounds.com)
+Este aplicativo utiliza áudio adaptado de [HTW](https://www.ZeldaSounds.com).
 
-The app makes use of data and software from the Graviational Wave Open Science Center at https://gwosc.org
+O aplicativo utiliza dados e software do [Gravitational Wave Open Science Center (GWOSC)](https://gwosc.org).
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://gwfilter.streamlit.app)
-
-
-
+[![Abrir no Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://gwfilter.streamlit.app)
