@@ -13,11 +13,11 @@ import pandas as pd
 
 
 def make_audio_file(bp_data, t0=None):
-    # -- window data for gentle on/off
+    # -- Aplicar uma janela aos dados para suavizar a entrada e a saída do sinal.
     window = signal.windows.tukey(len(bp_data), alpha=1.0/10)
     win_data = bp_data*window
 
-    # -- Normalize for 16 bit audio
+    # -- Normalizar para áudio de 16 bits.
     win_data = np.int16(win_data/np.max(np.abs(win_data)) * 32767 * 0.9)
 
     fs=1/win_data.dt.value
@@ -26,13 +26,13 @@ def make_audio_file(bp_data, t0=None):
     
     return virtualfile
 
-@st.cache_data(max_entries=5)   #-- Magic command to cache data
+@st.cache_data(max_entries=5)   #-- Comando especial para armazenar os dados em cache.
 def load_gw(t0, detector):
     strain = TimeSeries.fetch_open_data(detector, t0-14, t0+14, cache=False)
     return strain
 
 
-# -- Method to make and cache random noise
+# -- Função para gerar e armazenar em cache o ruído aleatório.
 @st.cache_data(max_entries=5)
 def makewhitenoise(fs, dt):
     noise = TimeSeries(random.normal(scale=.1, size=fs*dt), sample_rate=fs)
@@ -55,14 +55,14 @@ def makesine(freq, amp, makeplot=True, cropstart=1.0, cropend=1.05):
 def plot_signal(signal, cropstart=1.0, cropend=1.05, color_num=0, display=True):
     crop_signal = signal.crop(cropstart, cropend)
     source = pd.DataFrame({
-        'Time (s)': crop_signal.times,
-        'Pressure': crop_signal.value,
+        'Tempo (s)': crop_signal.times,
+        'Pressão': crop_signal.value,
         'color':['#1f77b4', '#ff7f0e'][color_num]
     })
 
     chart = alt.Chart(source).mark_line().encode(
-        alt.X('Time (s)'),
-        alt.Y('Pressure:Q',
+        alt.X('Tempo (s)'),
+        alt.Y('Pressão:Q',
               scale=alt.Scale(domain=(-10, 10),clamp=True)),
         color=alt.Color('color', scale=None),
         )
